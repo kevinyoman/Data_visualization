@@ -1,0 +1,57 @@
+---
+title: "classroom"
+author: "samuel"
+date: "2022-10-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+df <- read.csv("data_input/workshop.csv")
+anyNA(df)
+```
+
+https://cran.r-project.org/web/packages/Amelia/readme/README.html
+```{r}
+library(Amelia)
+amelia(df[,10:12])
+```
+
+
+```{r}
+df[1:2,"Sales"] <- NA
+df[!complete.cases(df), ]
+```
+
+
+
+
+
+
+
+```{r}
+df[1:2,"Sales"] <- NA
+head(df)
+```
+```{r}
+# mean imputation
+df[1:2, "Sales"] <- mean(df$Sales,na.rm = TRUE)
+head(df)
+```
+
+```{r}
+df <- read.csv("https://raw.githubusercontent.com/jchiquet/MAP573/master/data/ozoneNA.csv")
+```
+
+
+```{r warning=FALSE}
+library(naniar)
+gg_miss_var(df)
+```
+```{r}
+pct_miss_case(df)
+```
+

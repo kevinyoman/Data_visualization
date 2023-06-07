@@ -1,0 +1,6 @@
+"0","# Please type your code here"
+"0","vids_clean <- vids %>% "
+"0","  mutate(publish_hour = as.factor(publish_hour),"
+"0","         timetotrend = as.integer(timetotrend)) %>% "
+"0","  mutate_if(.predicate = is.character,"
+"0","            .fun = as.factor) "

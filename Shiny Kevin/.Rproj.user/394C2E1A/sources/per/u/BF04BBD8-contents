@@ -1,0 +1,59 @@
+# Fungsi dashboardPage() diperuntuhkan untuk membuat ketiga bagian pada Shiny
+dashboardPage(skin = 'yellow',
+              
+              # Fungsi dashboardHeader() adalah bagian untuk membuat header
+              dashboardHeader(title="Youtube Analysis interactive plot",titleWidth = '600px'),
+              
+              # Fungsi dashboardSidebar() adalah bagian untuk membuat sidebar
+              dashboardSidebar(
+                sidebarMenu(
+                  menuItem(
+                    text='Main Page',
+                    tabname='menu_1',
+                    icon=icon('house')
+                  ),
+                  menuItem(
+                    text='Plot Analysis',
+                    tabname='menu_2',
+                    icon=icon('chart-line')
+                  ),
+                  menuItem(
+                    text='Database',
+                    tabname='menu_2',
+                    icon=icon('table')
+                  )
+                )
+              ),
+              
+              # Fungsi dashboardBody() adalah bagian untuk membuat isi body
+              dashboardBody(
+                tabItems(
+                  # --- menu_1
+                  tabItem(
+                    tabName = 'menu_1',
+                    fluidRow(
+                      infoBox(title = "TOTAL UNIQUE VIDEOS", 
+                              value = length(unique(vids_clean$title)), # Untuk mengeluarkan value tertentu
+                              icon = icon("video"), 
+                              color = "red") 
+                    )
+                  ),
+                  
+                  # --- menu_2
+                  tabItem(
+                    tabName = 'menu_2',
+                    fluidRow(
+                      
+                    )
+                  ),
+                  
+                  # --- menu_3
+                  tabItem(
+                    tabName = 'menu_3',  
+                    fluidRow(
+                      
+                    )
+                  )
+                )
+              )
+)

@@ -1,0 +1,9 @@
+"0","# Please type your code here"
+"0","vids_count <- vids_clean %>% "
+"0","  group_by(category_id) %>% "
+"0","  summarise(freq = n())%>% "
+"0","  arrange(-freq) %>% "
+"0","  mutate(label = glue(""Category: {category_id}"
+"0","                      Freq: {freq}""))"
+"2","Error in group_by(., category_id) : object 'vids_clean' not found
+"

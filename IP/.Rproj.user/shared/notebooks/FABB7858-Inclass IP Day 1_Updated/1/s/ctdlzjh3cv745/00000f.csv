@@ -1,0 +1,6 @@
+"0","# Please type your code here"
+"0","vids_clean <- "
+"0","vids %>% "
+"0","  mutate(likes_per_view = likes / views,"
+"0","         dislikes_per_view = dislikes / views,"
+"0","         comment_per_view = comment_count / views)"

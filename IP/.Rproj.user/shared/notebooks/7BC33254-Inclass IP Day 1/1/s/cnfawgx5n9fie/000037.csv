@@ -1,0 +1,16 @@
+"0","# Please type your code here "
+"0","plot2 <- "
+"0","ggplot(data=vids_top_channel,mapping=aes(x=mean_views,y=reorder(channel_title,mean_views), text=label, color = mean_views))+"
+"0","  # geom_col(mapping=aes(fill=mean_views))+"
+"0","  geom_segment(mapping=aes(x=0, xend=mean_views, yend=channel_title ))+"
+"0","  geom_point(color='blue', size=4, alpha=0.6)+"
+"0","  scale_color_gradient(low='red',high='black')+"
+"0","  scale_x_continuous(labels = scales::label_comma(big.mark=""."")) +"
+"0","  labs(x = 'Mean Views',"
+"0","       y = NULL,"
+"0","       title = 'Top 10 YouTube Channels in Entertainment') +"
+"0","  theme_minimal() +"
+"0","  theme(legend.position = ""none"")"
+"2","Error in ggplot(data = vids_top_channel, mapping = aes(x = mean_views,  : 
+  object 'vids_top_channel' not found
+"

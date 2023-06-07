@@ -1,0 +1,7 @@
+"0","# Please type your code here"
+"0","contoh <- "
+"0","vids %>% "
+"0","  select(title, category_id, likes) %>% "
+"0","  filter(category_id %in% c(""Entertainment"", ""Comedy""), likes > 5e4)"
+"0",""
+"0","contoh"

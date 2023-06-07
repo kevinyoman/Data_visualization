@@ -1,0 +1,9 @@
+"0","# Please run the code down below"
+"0","vids_clean %>% "
+"0","  filter(category_id == ""Music"") %>% "
+"0","  group_by(publish_wday, publish_when) %>% "
+"0","  summarise(mean_views = mean(views)) %>%  "
+"0","  top_n(1)"
+"2","Error in filter(., category_id == ""Music"") : 
+  object 'vids_clean' not found
+"

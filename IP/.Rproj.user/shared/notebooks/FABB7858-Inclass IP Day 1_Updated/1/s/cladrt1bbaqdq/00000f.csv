@@ -1,0 +1,4 @@
+"0","# Please run the code down below"
+"0","vids$likes_per_view <- vids$likes / vids$views"
+"0",""
+"0","head(vids)"

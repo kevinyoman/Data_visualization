@@ -1,0 +1,3 @@
+"0","# Please type your code here"
+"0","select(.data = vids, # object data"
+"0","       trending_date, title) # list nama kolom yang mau diambil"

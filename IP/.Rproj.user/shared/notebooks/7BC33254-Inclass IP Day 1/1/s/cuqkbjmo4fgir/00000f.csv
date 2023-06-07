@@ -1,0 +1,8 @@
+"0","# Please type your code here"
+"0","tes <- "
+"0","vids %>% "
+"0","  select(title,category_id,likes) %>%"
+"0","  filter(likes > 5e4, category_id %in% c('Entertainment','Comedy')) "
+"0",""
+"0",""
+"0","# ambil value selain , gunakan !category_id %in% c('Entertainment','Comedy')"

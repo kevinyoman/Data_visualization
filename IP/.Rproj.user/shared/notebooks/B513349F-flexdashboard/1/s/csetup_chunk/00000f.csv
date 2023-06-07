@@ -1,0 +1,35 @@
+"0","# Settingan Agar tidak muncul numeric value with scientific format"
+"0","options(scipen = 9999)"
+"0",""
+"0","# List Library"
+"0","library(tidyverse)"
+"0","library(scales)"
+"0","library(flexdashboard)"
+"0","library(plotly)"
+"0","library(glue)"
+"0",""
+"0","# Data"
+"0","vids <- read_csv(""data_input/youtubetrends.csv"")"
+"2","[1mRows: [22m[34m2986[39m [1mColumns: [22m[34m16[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m────────────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m  (6): title, channel_title, category_id, publish_when, publish_wday, timetotrend
+[32mdbl[39m  (5): views, likes, dislikes, comment_count, publish_hour
+[33mlgl[39m  (3): comments_disabled, ratings_disabled, video_error_or_removed
+[34mdttm[39m (1): publish_time
+[34mdate[39m (1): trending_date"
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","# Data Cleansing"
+"0","vids_clean <- vids %>% "
+"0","  mutate(timetotrend = as.integer(timetotrend),"
+"0","         category_id = as.factor(category_id),"
+"0","         channel_title = as.factor(channel_title),"
+"0","         publish_hour = as.factor(publish_hour),"
+"0","         publish_when = as.factor(publish_when),"
+"0","         publish_wday = as.factor(publish_wday)) %>% "
+"0","  mutate(likes_per_view = likes / views,"
+"0","         dislikes_per_view = dislikes / views,"
+"0","         comment_per_view = comment_count / views)"
+"2","Warning: NAs introduced by coercion"

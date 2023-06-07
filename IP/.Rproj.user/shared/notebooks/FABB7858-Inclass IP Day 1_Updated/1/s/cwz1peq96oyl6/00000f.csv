@@ -1,0 +1,8 @@
+"0","# Please type your code here"
+"0","vids_clean <- vids %>% "
+"0","  mutate(timetotrend = as.integer(timetotrend),"
+"0","         channel_title = as.factor(channel_title),"
+"0","         category_id = as.factor(category_id),"
+"0","         publish_when = as.factor(publish_when),"
+"0","         publish_wday = as.factor(publish_wday),"
+"0","         publish_hour = as.factor(publish_hour))"

@@ -1,0 +1,7 @@
+"0","# Please type your code here"
+"0","vids_count <- vids_clean %>% "
+"0","  group_by(category_id) %>% "
+"0","  summarise(counts = length(category_id))%>% "
+"0","  arrange(-counts)"
+"0",""
+"0","vids_count"

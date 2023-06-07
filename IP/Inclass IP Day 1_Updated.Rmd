@@ -1,0 +1,760 @@
+---
+title: "IP Inclass Day 1"
+author: "Victor Nugraha"
+date: "`r format(Sys.Date(), '%B %e, %Y')`"
+output:
+  html_document:
+    theme: cosmo
+    highlight: breezedark
+    toc: true
+    toc_float:
+      collapsed: false
+    df_print: paged
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup, include=FALSE}
+# clear-up the environment
+rm(list = ls())
+
+# chunk options
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  fig.align = "center",
+  comment = "#>"
+)
+
+# scientific notation
+options(scipen = 9999)
+```
+
+# Course Map
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("assets/Interactive Plotting.png")
+```
+
+1. Dive Deeper Into Data Wrangling & Exploration Tools
+2. Static Visualization Transformation/Interactive Plot
+3. Web Dashboard
+
+# Dive Deeper Into Data Wrangling & Exploration Tools
+
+# -> Heading
+## -> Heading 2
+### -> Heading 3
+
+Pada course kali ini, kita akan menggunakan package [`tidyverse`](https://www.tidyverse.org/), package tersebut terdiri dari beberapa package. Dimana setiap package yang tedapat pada package *tidyverse* akan mempermudah kita dalam melakukan wrangling dan eksplorasi data.
+
+```{r}
+# install.packages("tidyverse")
+library(tidyverse)
+```
+
+Beberapa package umum yang terdapat di dalam `tidyverse` antara lain:
+
+- `ggplot2`
+- `dplyr`
+- `tidyr`
+- `readr`
+- `purrr`
+- `tibble`
+- `stringr`
+- `forcats`
+
+## Membaca data dengan `readr`
+
+Biasanya kita menggunakan fungsi `read.csv()` untuk membaca data. Kali ini mari kita coba menggunakan fungsi `read_csv()` dari library `readr` untuk membaca data **YouTube Trending 2017, All Unique Videos**.
+
+Perbedaan menggunakan `read_csv()` dibandingkan `read.csv()`:
+
+- `read_csv()` mendeteksi kolom bertipe data tanggal dan mengubahnya secara langsung.
+  + Ketika kita menggunakan fungsi ini, data tanggal kita harus memiliki format yang lengkap (Year-Month-Day)
+
+```{r}
+# Please type your code here
+vids <- read_csv("data_input/youtubetrends.csv")
+  
+str(vids)
+```
+
+**Membaca data dengan read.csv()**
+
+```{r}
+# Please type your code here
+vids2 <- read.csv("data_input/youtubetrends.csv")
+  
+str(vids2)
+```
+
+Penjelasan mengenai 16 kolom dalam dataframe:
+
+- `trending_date`: tanggal trending (format: YY.MM.DD)
+- `title`: judul video
+- `channel_title`: nama channel Youtube
+- `category_id`: kategori video
+- `publish_time`: tanggal upload video (format: YYYY-MM-DD-HH-MM-SS)
+- `views`: jumlah views dalam video tersebut
+- `likes`: jumlah likes dalam video tersebut
+- `dislikes`: jumlah dislikes dalam video tersebut
+- `comment_count` jumlah komentar
+- `comment_disabled`: apakah kolom komentar tidak diaktifkan
+- `rating_disabled`: apakah rating video tidak diaktifkan
+- `video_error_or_removed`: apakah video dihapus
+- `publish_hour`: jam video tersebut dipublish
+- `publish_when`: range video tersebut dipublish
+- `publish_wday`: hari video tersebut dipublish
+- `timetotrend`: rentan waktu video tersebut dari dipublish sampai menjadi trending
+
+## Data Wrangling & Exploratory dengan `dplyr`
+
+**`dplyr`** adalah package khusus yang mempermudah kita dalam melakukan data wrangling ataupun eksplorasi data. Berikut beberapa tahapan yang akan kita lakukan dalam melakukan data wrangling ataupun eksplorasi data.
+
+- Inspeksi data
+- Seleksi kolom
+- Filter baris
+- Membuat atau mengubah kolom
+- Agregasi data
+- Mengurutkan baris
+
+### Seleksi kolom
+
+*Tugas:* Kita sebagai tim data diminta untuk mengambil data video youtube yang berisikan kolom `trending_date` dan `title` saja.
+
+**Cara base:**
+
+```{r}
+# Please run the code down below
+vids[,c("trending_date", "title")]
+```
+
+**Cara dplyr:**
+
+Fungsi yang akan digunakan adalah `select()`
+
+```{r}
+# Please type your code here
+select(.data = vids, # object data
+       trending_date, title) # list nama kolom yang mau diambil
+```
+
+### Filter baris
+
+*Tugas:* Kita sebagai tim data diminta untuk mengambil data video youtube yang kategorinya adalah `Music` dan memiliki `views lebih dari 1 juta`.
+
+**Cara base:**
+
+```{r eval=FALSE}
+# Please run the code down below
+vids[vids$category_id %in% "Music" & vids$views > 1000000, ]
+```
+
+**Cara dplyr:**
+
+Fungsi yang akan digunakan adalah `filter()`
+
+```{r}
+# Please type your code here
+filter(.data = vids, # object data
+       category_id %in% "Music", views > 1e6) # kondisi filter
+```
+
+Additional Notes:
+
+- Pada fungsi filter, kita tidak menuliskan object data karena sudah diletakan pada parameter `.data =`
+- Logical operator `&` bisa digantikan dengan simbol `,`
+
+
+### Konsep Piping
+
+Simbol `%>%` disebut sebagai piping, cara kerjanya adalah melanjutkan suatu proses ke proses lainnya secara **sekuensial** atau berurutan. Untuk lebih memahaminya, mari kita coba lihat perbandingan di bawah ini.
+
+*Sebagai contoh tugas:* Kita secara tiba-tiba diminta tolong oleh Mas Jafar mengenai hal yang urgent, yaitu untuk menarik data dengan kolom `title`, `category_id` & `likes` untuk video youtube dengan kategori `Entertainment` & `Comedy` dengan `likes lebih dari 50.000`  
+
+**Hasil tanpa piping:**
+
+```{r}
+# Please type your code here
+cond1 <- 
+select(.data = vids, title, category_id, likes)
+
+cond2 <- 
+filter(.data = cond1, category_id %in% c("Entertainment", "Comedy"), likes > 5e4)
+```
+
+Additional Notes:
+
+- Jika ingin mengambil value selain conditional subseting, kita bisa membarikan simbol `!`
+  + Contoh Syntax: `!category_id %in% c("Entertainment", "Comedy")`
+- Gunakanlah `%in%` ketika melakukan conditional subseting
+
+**Hasil dengan piping:**
+
+```{r}
+# Please type your code here
+contoh <- 
+vids %>% 
+  select(title, category_id, likes) %>% 
+  filter(category_id %in% c("Entertainment", "Comedy"), likes > 5e4)
+
+contoh
+```
+
+> Shortcut Piping: CTRL/CMD + SHIFT + M
+
+Additional Notes:
+
+- Konsep pipping, tidak terbatas untuk fungsi dari `library(tidverse)` saja
+
+### Inspeksi data
+
+Inspeksi tipe data untuk membuktikan apakah fungsi `read_csv()` memang betul langsung mengubah tipe data yang tanggal atau tidak, sekaligus kita akan mencoba untuk mengecek tipe data apa saja yang belum sesuai.
+
+**Cara base:**
+
+```{r}
+# Please run the code down below
+str(vids)
+```
+
+**Cara dplyr:**
+
+Fungsi yang akan digunakan adalah `glimpse()`
+
+```{r}
+# Please type your code here
+vids %>% 
+  glimpse()
+```
+
+```{r}
+glimpse(vids)
+```
+
+```{r}
+unique(vids$publish_hour)
+```
+
+
+Kolom apa saja yang belum sesuai dari hasil inspeksi datanya?
+
+*Menjadi Factor*
+
+- channel_title
+- category_id
+- publish_when
+- publish_wday
+- publish_hour
+
+*Menjadi Integer*
+
+- timetotrend
+
+### Modifikasi tipe data & kolom
+
+#### Modifikasti tipe data
+
+Dari beberapa kolom yang tipe datanya belum sesuai mari kita coba ubah terlebih dahulu menjadi tipe yang lebih sesuai
+
+**Cara base:**
+
+```{r}
+# Please run the code down below
+vids$category_id <- as.factor(vids$category_id)
+```
+
+**Cara dplyr:**
+
+Fungsi yang akan digunakan adalah `mutate()`
+
+- Opsi 1:
+
+```{r}
+# Please type your code here
+vids_clean <- vids %>% 
+  mutate(timetotrend = as.integer(timetotrend),
+         channel_title = as.factor(channel_title),
+         category_id = as.factor(category_id),
+         publish_when = as.factor(publish_when),
+         publish_wday = as.factor(publish_wday),
+         publish_hour = as.factor(publish_hour))
+```
+
+- Opsi 2:
+
+```{r}
+vids_clean <- 
+vids %>% 
+  mutate(publish_hour = as.factor(publish_hour),
+         timetotrend = as.integer(timetotrend)) %>% 
+  mutate_if(.predicate = is.character,
+            .funs = as.factor) 
+
+glimpse(vids_clean)
+```
+
+- Opsi 3:
+
+```{r}
+vids_clean <- 
+vids %>% 
+  mutate_at(.vars = c("channel_title", "category_id", "publish_when", "publish_wday", "publish_hour"), 
+            .funs = as.factor) %>% 
+  mutate(timetotrend = as.integer(timetotrend))
+
+glimpse(vids_clean)
+```
+
+*Menjadi Factor*
+
+- channel_title
+- category_id
+- publish_when
+- publish_wday
+- publish_hour
+
+*Menjadi Integer*
+
+- timetotrend
+
+#### Modifikasi kolom
+
+Kita akan menambahkan beberapa kolom baru, yaitu:
+
+- `likes_per_view`: likes per views
+- `dislikes_per_view`: dislikes per views
+- `comment_per_view`: comment_count per views
+
+**Cara base:**
+
+```{r}
+# Please run the code down below
+vids$likes_per_view <- vids$likes / vids$views
+
+head(vids)
+```
+
+**Cara dplyr:**
+
+Fungsi yang akan digunakan adalah `mutate()`
+
+```{r}
+# Please type your code here
+vids_clean <- 
+vids %>% 
+  mutate(likes_per_view = likes / views,
+         dislikes_per_view = dislikes / views,
+         comment_per_view = comment_count / views)
+```
+
+### Agregasi Data
+
+*Tugas:* Ternyata pekerjaan kita masih belum selesai, kita dimintakan tolong LAGI oleh Mas Jafar untuk menghitung rata-rata views video trending yang dimiliki oleh tiap channel YouTube
+
+**Cara base:**
+
+```{r eval=FALSE}
+# Please run the code down below
+aggregate(views ~ channel_title, data = vids_clean, FUN = mean)
+```
+
+**Cara dplyr:**
+
+Pada `dplyr`, kita dapat melakukan aggregasi data menggunakan urutan fungsi berikut:
+
+- `group_by()`: melakukan pengelompokkan berdasarkan kolom tertentu, sehingga proses apapun setelahnya dilakukan berdasarkan pengelompokkan tersebut.
+- `summarise()`: menghitung nilai statistik tertentu.
+- `ungroup()`: melepaskan pengelompokkan.
+
+Notes: Untuk kolom baru yang akan dibuat akan disimpan dengan nama kolom `mean_views` dan keseluruhan objeknya akan dismpan dengan nama `vids_agg`
+
+```{r}
+# Please type your code here
+vids_agg <- 
+ vids_clean %>% 
+  group_by(channel_title) %>% 
+  summarise(mean_views = mean(views)) %>% 
+  ungroup()
+```
+
+> Note: penggunaan `ungroup()` memang sering kali tidak terlihat efeknya, namun best practice setelah melakukan tahapan yang menggunakan grouping adalah melepas grouping tersebut menggunakan ungroup. 
+
+Sebagai contohnya, mari kita coba cari tahu **periode (hari dan jam)** kapan seorang YouTuber dengan kontek category **Music** mendapatkan **rata-rata views terbanyak**!
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("assets/expected_result.PNG")
+```
+
+**Tanpa ungroup():**
+
+```{r}
+# Please run the code down below
+vids_clean %>% 
+  filter(category_id == "Music") %>% 
+  group_by(publish_wday, publish_when) %>% 
+  summarise(mean_views = mean(views)) %>%  
+  top_n(1)
+```
+
+**Dengan ungroup():**
+
+```{r}
+# Please run the code down below
+
+vids_clean %>% 
+  filter(category_id == "Music") %>% 
+  group_by(publish_wday, publish_when) %>% 
+  summarise(mean_views = mean(views),
+            mean_likes = mean(likes)) %>% 
+  ungroup() %>% 
+  top_n(1)
+```
+
+Additional Notes:
+
+- Ketika kita menggunakan fungsi `top_n()` untuk beberapa kolom, fungsi tersebut akan menggambil hasil yang paling terakhir pada fungsi `summarise()`
+
+### Mengurutkan baris
+
+*Tugas:* Agar hasil agregasi untuk rata-rata views dari setiap trending video.
+
+**Cara base:**
+
+```{r eval=FALSE}
+# Please run the code down below
+vids_agg[order(vids_agg$mean_views, decreasing = T),]
+```
+
+**Cara dplyr:**
+
+Fungsi yang akan digunakan adalah `arrange()`
+
+```{r}
+# Please type your code here
+vids_agg %>% 
+  arrange(desc(mean_views))
+```
+
+```{r}
+vids_agg %>% 
+  arrange(-mean_views) %>% 
+  head(3)
+```
+
+###️ Dive Deeper
+
+> Background: Mba Wulan saat ini adalah seorang Data Science Instructor di Algoritma. Untuk mengisi waktu luang, Mba Wulan ingin mengisi waktunya untuk menjadi seorang YouTuber. Akan tetapi, beliau masih bingung terkait konten apa yang sebaiknya dibuat, agar videonya cukup sering masuk ke jajaran trending.
+
+1. Dari cerita di atas, rekomendasikan **kategori video** apa yang sebaiknya Mba Wulan buat. Dengan kata lain, cari tahu   banyaknya kemunculan (frekuensi) video yang trending dari setiap **kategori video**. Lalu, simpan ke objek bernama `vids_count`.
+
+*Hint:* 
+
+- Untuk melakukan perhitungan count, fungsi yang digunakan adalah `n()`
+- Urutkan hasilnya dengan mennggunakan fungsi `arrange()` dan jangan diambil nilai yang paling tingginya saja.
+
+```{r}
+# Please type your code here
+
+```
+
+*Insight:* Kategori dengan jumlah video trending terbanyak adalah ...
+
+2. Berdasarkan rekomendasi kategori video di atas, Mba Wulan juga ingin mengetahui beberapa channel terkenal yang nantinya akan digunakan sebagai referensi channel yang akan dibuat. Dengan kata lain, cari tahu *top 10 YouTube channel dengan jumlah rata-rata views tertinggi pada kategori video tersebut*. Lalu, simpan ke objek bernama `vids_top_channel`
+
+```{r}
+# Please type your code here
+
+```
+
+## Official Documentation
+
+> Official Documentation & Cheatsheet `dplyr`: https://dplyr.tidyverse.org/
+
+# Static Visualization Transformation/Interactive Plot
+
+Seiring bertambahnya data dalam kompleksitas dan ukuran, sering kali tim analis diberi tugas yang sulit untuk menyeimbangkan storytelling dengan hasil visualisasinya. Tim Analis juga ditugaskan untuk menemukan keseimbangan yang baik antara cakupan dan detail di bawah batasan grafik dan plot statis. 
+
+Harapannya dengan melakukan transformasi dari plot yang statis menjadi plot interaktif, kita sebagai tim analis dapat menyampaikan informasi yang lebih *informatif dan menarik*.
+
+## Interactive Plot dengan `plotly`
+
+Packages **plotly** adalah salah satu package yang sangat dipuji dalam komunitas data science karena kapabilitas dan fleksibilitasnya untuk membantu kita dalam membuat *visual interaktif* dari objek *ggplot*.
+
+```{r}
+# install.packages("plotly")
+library(plotly)
+```
+
+Tahapan pembuatan interactive plot menggunakan `plotly`:
+
+1. Formulasikan business question
+2. Persiapan data
+3. visualisasi statis dengan `ggplot()`
+4. Mengubah objek ggplot menjadi plotly dengan `ggplotly()`
+
+### Plot 1: 
+
+**Business Question:**
+
+Buatlah analisis kategori video yang paling sering masuk ke dalam jajaran video trending!
+
+- Persiapan data
+
+*Hint:* Gunakan objek `vids_count`
+
+```{r}
+# Please type your code here
+
+```
+
+- Visualisasi Statis
+
+```{r}
+# Please type your code here
+
+```
+
+Additional:
+
+```
+  labs(title = 'Trending Categories on Youtube US 2017' ,
+       x = 'Video Count',
+       y = NULL) +
+  theme_minimal() +
+  theme(legend.position = "none") 
+```
+
+- Mengubah objek ggplot menjadi interaktif
+
+Fungsi yang akan digunakan `ggplotly()`
+
+```{r}
+# Please type your code here
+
+```
+
+#### Tooltip
+
+Tooltip adalah informasi atau label yang ditampilkan ketika user meng-hover plot. 
+
+```{r}
+# install.packages("glue")
+library(glue)
+```
+
+```{r}
+# contoh penggunaan fungsi glue dari library glue
+nama <- c("Wulan", "Jafar", "Fafil", "Kevin", "Lita", "Victor")
+glue("Nama Instructor: {nama}")
+```
+
+Tahapan dalam menambahkan `tooltip`:
+
+1. Pada tahapan persiapan data, tambahkan kolom berisi informasi tulisan pada tooltip. Fungsi `glue()` digunakan untuk menampilkan nilai pada kolom.
+
+```{r}
+# Please type your code here
+
+```
+
+2. Membuat ulang visualisasi dengan menambahkan parameter `text` pada `aes()`
+
+```{r}
+# Please type your code here
+
+```
+
+3. Menambahkan parameter `tooltip = "text"` pada `ggplotly()`
+
+```{r}
+# Please type your code here
+
+```
+
+### Plot 2:
+
+**Business Question:**
+
+Dari kategori Entertainment, lakukan analisis top 10 channel YouTube dengan rata-rata jumlah views tertinggi! 
+
+- Persiapan data
+
+*Hint:* Gunakan codingan objek `vids_top_channel`
+
+```{r}
+# Please type your code here
+
+```
+
+- Visualisasi Statis
+
+```{r}
+# Please type your code here
+
+```
+
+Additional:
+
+```
+  scale_x_continuous(labels = scales::comma) +
+  labs(x = 'Mean Views',
+       y = NULL,
+       title = 'Top 10 YouTube Channels in Entertainment') +
+  theme_minimal() +
+  theme(legend.position = "none") 
+```
+
+- Mengubah objek ggplot menjadi interaktif
+
+Fungsi yang akan digunakan `ggplotly()`
+
+```{r}
+# Please type your code here
+
+```
+
+### Plot 3:
+
+**Business Question:**
+
+Setelah menganalisis top 10 channel dari kategori video Entertainment, kita ingin melihat rata-rata aktivitas viewers pada kategori tersebut di setiap `publish_hour`. Tipe plot apa yang baiknya digunakan? Buatlah interactive plotnya.
+
+- Persiapan data
+
+```{r}
+# Please type your code here
+
+```
+
+- Visualisasi Statis
+
+```{r}
+# Please type your code here
+
+```
+
+Additional:
+
+```
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Viewers Activity for Entertainment Videos",
+       x = "Publish Hour",
+       y = "Average Views") +
+  theme_minimal()
+```
+
+- Mengubah objek ggplot menjadi interaktif
+
+Fungsi yang akan digunakan `ggplotly()`
+
+```{r}
+# Please type your code here
+
+```
+
+## Official Documentation
+
+> Official Documentation `plotly`: https://plotly.com/r/
+
+# Web Dashboard
+
+## Flexdashboard
+
+Flex Dashboard adalah paket R yang mudah membuat dasbor fleksibel, menarik, dan interaktif”. Pembuatan dan penyesuaian dasbor dilakukan menggunakan R Markdown dengan format output `flexdashboard::flex_dashboard`. 
+
+```{r}
+# install.packages("flexdashboard")
+library(flexdashboard)
+```
+
+Langkah membuat file Rmd dengan template *flexdashboard*:
+
+1. Pilih Menu File > New File > R Markdown
+2. Pada bagian "From Template", pilih "Flex Dashboard"
+3. Klik tombol "OK"
+4. Simpan file Rmd dan beri nama file (bisa dengan shortcut CTRL + S)
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("assets/flexscreen.png")
+```
+
+### Library & Data
+
+```{r}
+# Settingan Agar tidak muncul numeric value
+options(scipen = 9999)
+
+# List Library
+library(tidyverse)
+library(scales)
+library(flexdashboard)
+library(plotly)
+library(glue)
+
+# Data
+vids <- read_csv("data_input/youtubetrends.csv")
+
+# Data Cleansing
+vids_clean <- vids %>% 
+  mutate(timetotrend = as.integer(timetotrend),
+         category_id = as.factor(category_id),
+         channel_title = as.factor(channel_title),
+         publish_hour = as.factor(publish_hour),
+         publish_when = as.factor(publish_when),
+         publish_wday = as.factor(publish_wday)) %>% 
+  mutate(likes_per_view = likes / views,
+         dislikes_per_view = dislikes / views,
+         comment_per_view = comment_count / views)
+```
+
+## Shiny
+
+**Shiny** adalah packages dari RStudio, yang menyediakan framework aplikasi web untuk membuat aplikasi web interaktif (visualisasi) yang disebut “_Shiny apps_”. Kemudahan bekerja dengan Shiny telah mempopulerkannya di antara pengguna R. Aplikasi web ini menampilkan objek R dengan cantik (seperti plot, tabel, dll.) dan juga dapat di-_deploy_ untuk memungkinkan diakses oleh siapa saja.
+
+Shiny menyediakan widget yang memungkinkan untuk membangun aplikasi yang elegan dengan sedikit usaha.
+
+Struktur aplikasi **shiny** dasar:
+
+```{r}
+knitr::include_graphics(path = "assets/shiny architecture.png")
+```
+
+- *global.R*: Untuk menyiapkan lingkungan aplikasi, misalnya, library, impor data dan persiapan data.
+- *ui.R*: User Interface (UI) untuk menampilkan input dan output.
+- *server.R*: Untuk memproses input dari user dan mengubahnya menjadi output.
+
+```{r}
+# install.packages("shinydashboard")
+library(shinydashboard)
+```
+
+Referensi:
+
+- `shiny Cheatsheet`: https://raw.githubusercontent.com/rstudio/cheatsheets/main/shiny.pdf
+- `shiny Gallery`: https://shiny.rstudio.com/gallery/
+- `shiny Input` Gallery: https://shiny.rstudio.com/gallery/widget-gallery.html
+- `shinyWidgets`: http://shinyapps.dreamrs.fr/shinyWidgets/
+- `shinydashboard`: https://rstudio.github.io/shinydashboard/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

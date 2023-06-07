@@ -1,0 +1,6 @@
+"0","# Please type your code here"
+"0","cond1 <- "
+"0","select(.data = vids, title, category_id, likes)"
+"0",""
+"0","cond2 <- "
+"0","filter(.data = cond1, category_id %in% c(""Entertainment"", ""Comedy""), likes > 5e4)"

@@ -1,0 +1,4 @@
+"0","vids %>% "
+"0","  mutate_at(.vars=c(""channel_title"",""category_id"",""publish_when"",""publish_wday"",""publish_hour""),"
+"0","            .funs=as.factor) %>% "
+"0","  mutate(timetotred=as.integer(timetotrend))"

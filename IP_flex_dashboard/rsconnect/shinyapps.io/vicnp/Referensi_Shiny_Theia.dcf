@@ -1,0 +1,14 @@
+name: Referensi_Shiny_Theia
+title: Referensi_Shiny_Theia
+username:
+account: vicnp
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7351379
+bundleId: 6418350
+url: https://vicnp.shinyapps.io/Referensi_Shiny_Theia/
+when: 1666169460.28326
+lastSyncTime: 1666169460.28327
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: template_shiny_dashboard.md

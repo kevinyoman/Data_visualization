@@ -1,0 +1,5 @@
+"0","# Pembuatan visual interaktif
+ggplotly(p = plot2, tooltip = ""text"")
+"
+"2","Error in FUN(X[[i]], ...) : object 'label' not found
+"

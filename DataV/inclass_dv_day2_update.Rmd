@@ -1,0 +1,1255 @@
+---
+title: "Inclass DV"
+author: "Kevin Wibowo"
+date: "Theia Night: 10-13 Oktober 2022"
+output:
+  html_document:
+    theme: cosmo
+    highlight: tango
+    toc: true
+    toc_float:
+      collapsed: true
+    number_sections: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+# clear-up the environment
+rm(list = ls())
+
+# chunk options
+knitr::opts_chunk$set(
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  comment = "#>"
+)
+```
+
+TOPIC:
+1. DATA WRANGLING
+2. DATA VISUALIZATION
+
+# About The Dataframe
+
+Data yang akan kita gunakan untuk mendalami Data Visualization selama 4 hari kedepan adalah sebuah dataframe yang bernama **Youtube's US Trending Videos**. 
+
+Contoh trending video di Youtube:
+
+```{r}
+# Please run code down below 
+knitr::include_graphics("assets/trending.png")
+```
+
+## Data Import / Read Data
+
+```{r}
+# Please run code down below
+vids <- read.csv("data_input/USvideos.csv")
+head(vids)
+```
+
+Penjelasan mengenai 12 kolom dalam dataframe:
+
+* `trending_date`: tanggal trending (format: YY.DD.MM)
+* `title`: judul video
+* `channel_title`: nama channel Youtube
+* `category_id`: kategori video
+* `publish_time`: tanggal upload video (format: YYYY-MM-DD-HH-MM-SS)
+* `views`: jumlah views dalam video tersebut
+* `likes`: jumlah likes dalam video tersebut
+* `dislikes`: jumlah dislikes dalam video tersebut
+* `comment_count` jumlah komentar
+* `comment_disabled`: apakah kolom komentar tidak diaktifkan
+* `rating_disabled`: apakah rating video tidak diaktifkan
+* `video_error_or_removed`: apakah video dihapus
+
+Setelah melakukan import dataframe yang ingin digunakan jangan lupa untuk melakukan inspeksi tipe data, untuk memastikan tipe data sudah sesuai.
+
+```{r}
+# Inspect Data Type 
+str(vids)
+```
+
+Apa saja kolom yang tipe datanya belum sesuai?
+
+- datetimes: trending_date, publish_tiem
+- factor: category_id
+
+```{r}
+nrow(vids)
+nrow(data.frame(unique(vids$channel_title)))
+```
+
+
+Kenapa melakukan inspeksi tipe data itu **penting** sebelum melanjutkan ke tahap selanjutnya?
+Untuk memastikan bahwa semua tipe data yang ada pada dataframe tersebut sudah sesuai dan *bisa diolah lebih lanjut*.
+
+## Data Wrangling
+
+### Manipulasi data waktu menggunakan fungsi as.Date()
+
+* YEAR
+  - %Y = tahun empat digit, contoh: 2022
+  - %y = tahun dua digit, contoh: 22
+
+* MONTH
+  - %B = nama bulan, contoh: January
+  - %b = nama bulan singkatan, contoh: Jan
+  - %m = bulan dua digit, contoh: 01
+
+* DAY
+  - %A = nama hari, contoh: Monday
+  - %d = tanggal, contoh: 01 sampai 31
+
+Default date pada R <- Year - Month - Day (YYYY/MM/DD)
+
+Coba ubah kolom `trending_date` menggunakan fungsi `as.Date()` tanpa diassign ke kolom awal.
+
+Quick Summary About `as.Date()`
+
+- Format tanggal/date yang bisa langsung diubah dengan menggunakn `as.date()` adalah Year-Month-Day
+- Dia akan menghilangkan format waktu
+- Jika format date/tanggal berbeda dengan default fungsi `as.Date()`, kita bisa menambahkan parameter **format =**.
+
+* Format date dari kolom trending_date = Year-Day-Month
+
+```{r}
+class(vids$trending_date)
+class(as.Date(vids$trending_date, format = "%y.%d.%m"))
+```
+
+### Manipulasi data waktu menggunakan library `lubridate`
+
+Penggunaan lubridate secara singkat dapat dilihat di `cheatsheet`
+
+```{r}
+# install.packages("lubridate")
+library(lubridate)
+```
+
+* Berikut ini beberapa contoh tanggal yang akan kita coba ubah bentuknya menggunakan lubridate:
+```{r}
+a <- "08/11/21"
+b <- "Monday, 08-11-2021"
+c <- "November 8th, 2021"
+d <- "2021/11/8, 1:42PM"
+```
+
+```{r}
+# menggunakan lubridate
+dmy(c(a,b))
+dmy(b)
+mdy(c)
+ymd_hm(d)
+```
+
+Setelah mempelajari lubridate, kita akan menerapkannya ke kolom-kolom yang ada di data `vids`.
+
+* Kolom `trending_date`
+
+```{r}
+# Please type your code
+vids$trending_date <- ydm(vids$trending_date)
+class(vids$trending_date)
+head(vids$trending_date)
+```
+
+* Kolom `publish_time`
+
+Notes: 
+Kita bisa merubah timezone (zona waktu)
+List time zone: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+Kita ubah timezone menjadi Jakarta
+
+```{r}
+head(vids$publish_time)
+# Please run code down below
+head(ymd_hms(vids$publish_time, tz = "Asia/Jakarta"))
+```
+
+Kita ubah timezone menjadi New_York
+
+```{r}
+# Please run code down below
+head(ymd_hms(vids$publish_time, tz = "America/New_York"))
+```
+
+```{r}
+# Please type your code
+vids$publish_time <- ymd_hms(vids$publish_time, tz = "America/New_York")
+class(vids$publish_time)
+```
+
+Coba cek kembali tipe data untuk kedua kolom yang sudah diubah tipenya.
+```{r}
+# Please type your code
+
+```
+
+Quick Summary About tipe yang memiliki tanggal & waktu:
+
+- *POSIXct/POSIXt* adalah tipe data untuk data yang memiliki tanggal & waktu 
+- Jika ada data waktu, kita bisa mengatur zona waktunya dengan menambahkan parameter **tz =**
+
+**DIVE DEEPER**
+
+1. Buat kolom baru berisi hari publish video dan jam publish video untuk `vids`. Beri nama `publish_day` dan `publish_hour` dari kolom `publish_time`
+
+* `publish_day ` -> keluarkan nama hari
+
+Hint: label = T, abbr = F
+
+```{r}
+# Please type your code
+vids$publish_day <- wday(vids$publish_time, label = T, abbr = F)
+```
+
+* `publish_hour`
+
+```{r}
+# Please type your code
+vids$publish_hour <- hour(vids$publish_time)
+```
+
+2. Buat kolom berisi berapa lama waktu untuk trending? Beri nama `time_to_trend`
+
+Hint:
+
+- buat kolom `publish_date` yang isinya **hanya** tanggal (YYY-MM-DD) dari kolom `publish_time`
+- mengurangkan kolom `trending_date` dengan `publish_date` kemudian ubah menjadi numeric
+
+```{r}
+# Please type your code
+vids$publish_date <- date(vids$publish_time)
+vids$time_to_trend <- as.numeric(vids$trending_date - date(vids$publish_time))
+class(vids$time_to_trend)
+```
+
+### Membuat kategori jam untuk kolom `publish_hour`
+
+```{r}
+# Please run the code down below
+head(vids$publish_hour)
+```
+
+Kita akan mengkategorikan `publish_hour` menjadi 3 kategori:
+
+- 12am to 8am
+- 8am to 3pm
+- 3pm to 12am
+
+Langkah yang dilakukan:
+
+- Membuat kolom untuk informasi jam (`publish_hour`)
+- Membuat function untuk mentransformasi jam menjadi kategori
+- Menerapkan function tersebut ke seluruh data
+
+Membuat function untuk mengkategorikan jam
+```{r}
+# Please run the code down below
+convert_hour <- function(y){ 
+    if(y <= 8)
+      {
+      y <- "12am to 8am" # Untuk video dengan publish_hour antara tengah malam hingga jam 8 pagi
+    }
+    else 
+      if(y > 8 & y < 16)
+      {
+      y <- "8am to 3pm" # untuk video di atas jam 8 pagi hingga jam 3 sore
+    }
+    else
+      {
+      y <- "3pm to 12am" # untuk video di atas jam 3 sore sampai tengah malam
+    }  
+}
+```
+
+Untuk mengimplementasikan fungsi `convert_hour` kita bisa memanfaatkan fungsi baru yang bernama `sapply()`.
+
+**sapply**: mengaplikasikan fungsi ke tiap *baris* secara bersamaan.
+formula: `sapply(X, FUN)`
+
+- `X` = parameter u/ mendefinisikan kolom apa yang ingin kita transformasi
+- `FUN` = parameter untuk memasukan nama fungsi yang sudah kita buat
+
+```{r}
+# Please run the code down below
+vids$publish_when <- sapply(X = vids$publish_hour, 
+                            FUN = convert_hour) 
+
+head(vids$publish_when)
+```
+
+```{r}
+# Please run the code down below
+str(vids$publish_when)
+```
+
+Ubah publish_when kedalam bentuk factor
+
+```{r}
+# Please type your code down below
+vids$publish_when <- as.factor(vids$publish_when)
+```
+
+### Merubah `category_id` 
+
+Pada tahapan ini kita akan melakukan transformasi pada kolom `category_id` dari angka yang tidak bermakna menjadi nama kategori yang lebih intuitif.
+
+```{r}
+# Please run the code down belom to check the data
+vids[ , c("channel_title", "category_id")]
+```
+
+untuk mengubah nilai `category_id` menjadi nilai tertentu dapat digunakan fungsi `switch()`. Namun switch hanya dapat mengubah satu nilai (hanya 1 baris, tidak bisa seluruh baris):
+
+```{r}
+switch("2", # data
+       "1" = "Education", # kamus
+       "2" = "Travel", 
+       "3" = "Music")
+
+# will return error
+# switch(c("1","2"),
+#        "1" = "Education",
+#        "2" = "Travel",
+#        "3" = "Music")
+```
+
+Hal ini diatasi dengan `sapply()`:
+
+```{r}
+# Please run the code down belom
+data <- c("1", "2", "4")
+
+sapply(X = data, # data/kolom yang ingin diubah 
+       FUN = switch, # fungsi
+       "1" = "Education", 
+       "2" = "Travel", 
+       "4" = "Music")
+```
+
+**Note:** 
+
+* `switch()` mentranslasikan nilai berdasarkan kamus. Bila nilai tidak ada pada kamus, maka dihasilkan NULL.
+* data lebih baik diubah ke tipe karakter terlebih dahulu
+
+Mengubah `category_id` untuk tiap row dengan `switch()` dengan bantuan `sapply()`:
+
+```{r}
+# Please run the code down below
+vids$category_id <- sapply(X = as.character(vids$category_id),
+                           FUN = switch, 
+                           "1" = "Film and Animation",
+                           "2" = "Autos and Vehicles", 
+                           "10" = "Music", 
+                           "15" = "Pets and Animals", 
+                           "17" = "Sports",
+                           "19" = "Travel and Events", 
+                           "20" = "Gaming", 
+                           "22" = "People and Blogs", 
+                           "23" = "Comedy",
+                           "24" = "Entertainment", 
+                           "25" = "News and Politics",
+                           "26" = "Howto and Style", 
+                           "27" = "Education",
+                           "28" = "Science and Technology", 
+                           "29" = "Nonprofit and Activism",
+                           "43" = "Shows")
+
+vids$category_id <- as.factor(vids$category_id)
+
+vids[ , c("channel_title", "category_id")]
+```
+
+### Merubah beberapa kolom dengan tipe `integer` menjadi `numeric` sekaligus
+
+Ketika kita ingin merubah beberapa *kolom* sekaligus, kita bisa menggunakan function `lapply()`. Misalnya kita ingin merubah kolom-kolom yang integer (`views`, `dislikes`, `comment_count`, dan `publish_hour`) menjadi numeric.
+
+formula: `lapply(data, fungsi)`
+
+```{r}
+# cara base
+vids$views <- as.numeric(vids$views)
+vids$likes <- as.numeric(vids$likes)
+vids$dislikes <- as.numeric(vids$dislikes)
+vids$comment_count <- as.numeric(vids$comment_count)
+```
+
+*Note:* Di bawah adalah contoh penggunaan `lapply()`, namun pada kasus ini tidak wajib dilakukan.
+
+```{r}
+# cara `lapply()`
+vids[,c("views", "likes", "dislikes", "comment_count")] <- lapply(vids[,c("views", "likes", "dislikes", "comment_count")], as.numeric)
+```
+
+Notes:
+**lapply**: untuk mengaplikasikan fungsi (misal merubah tipe data) ke beberapa kolom secara bersamaan.
+
+### Mengambil judul video yang unik
+
+Dalam data vids terdapat redudansi data yaitu terdapat video yang muncul beberapa kali karena trending lebih dari 1 hari. 
+
+```{r}
+length(vids$title)
+length(unique(vids$title))
+```
+
+Untuk analisis lanjutan, *kita hanya akan menggunakan data video saat video tersebut pertama kali trending* demi mengurangi redudansi data. Untuk itu kita dapat menggunakan `unique()` dan `match()`.
+
+**unique**: menghasilkan nilai unik dari suatu vektor.
+
+**match**: menghasilkan index data yang cocok dari hasil pencocokan vektor 1 ke vektor ke 2
+
+```{r}
+# dummy data
+df <- data.frame(nama = c("Ridlo", "Ridlo", "Kinan", "Kevin", "Kevin", "Kinan"),
+           nilai = c(70, 95, 85, 80, 70, 90))
+df
+```
+
+```{r}
+# mengubah urutan data agar nilai tertinggi paling atas
+df <- df[order(df$nilai, decreasing = T), ]
+df
+```
+
+```{r}
+# mencari index saat nama unique pertama kali muncul
+index <- match(unique(df$nama), df$nama) 
+
+# pada index berapa `unique(df$nama)` cocok/match dengan `df$nama` 
+index
+```
+
+```{r}
+# filter data yang termasuk pada index
+df[index, ]
+```
+
+Mari kita kurangi redudansi data yang terdapat di dataframe **vids** dan simpan dalam object baru bernama **vids.unik**
+
+```{r}
+# Please type your code down below
+vids.unik <- vids[match(unique(vids$title), vids$title), ]
+nrow(vids.unik)
+```
+
+Inclass Q: 
+bisakah ambil 2 data sekaligus dengan fungsi match() atau jika tidak ambil di urutan tengah (bukan urutan pertama).
+
+### Missing Value
+
+Missing value (NA) dapat menyulitkan pengolahan data. Oleh karena itu perlu dideteksi dan bila ada perlu diberi perlakuan.
+
+```{r}
+# cek missing value
+anyNA(vids.unik)
+colSums(is.na(vids.unik))
+```
+
+# Basic plotting in R
+
+**Exploratory Data Analysis** Bertujuan untuk mendapat informasi dari data (explorasi). EDA biasa dilakukan menggunakan base plot.
+
+Fungsi yang akan digunakan untuk melakukan base plot adalah `plot()`, jenis plot yang dihasilkan berubah sesuai tipe data yang dimasukkan, jika:
+
+- 1 variabel, x kategori: **bar chart**
+- 1 variabel, x numerik: **histogram plot**
+  + function: `hist()`
+- 2 variabel, x dan y adalah numerik: **scatter plot**
+- 2 variabel, x kategori, y numerik: **boxplot**
+  + Optional function: `boxplot()`
+- 2 variabel, x date, y numerik: **line plot** 
+  + Additional parameter: `type = "l"`
+
+## Histogram
+
+Business case: Sebagai seorang konsultan media sosial, kita ditugaskan untuk membantu seorang klien yang ingin memulai karir sebagai youtuber. Klien kita sangat tertarik untuk membuat konten dengan kategori `Autos and Vehicles`, `Gaming` dan `Travel and Events`. Dia ingin mendapatkan gambaran secara garis besar *berapakah distribusi like ratio yang bisa didapatkan dari ketiga kategori tersebut?*
+
+Hint: 
+
+- Gunakan data vids.unik
+- Like ratio dapat dihitung dengan membagi like dengan view
+- Melakukan conditional subseting  
+
+Step 1: Menghitung like ratio lalu simpan ke objek bernama `like_ratio`
+
+```{r}
+# Please type your code down below
+vids.unik$like_ratio <- vids.unik$likes/vids.unik$views
+head(vids.unik$like_ratio)
+```
+
+Step 2: Melakukan conditional subseting untuk 3 unique value lalu simpan ke objek baru bernama `vids.agt`
+
+```{r}
+# Please type your code down below
+vids.agt <- vids.unik[vids.unik$category_id %in% c("Autos and Vehicles", "Gaming", "Travel and Events"), ]
+
+nrow(vids.agt)
+head(vids.agt)
+```
+
+Step 3: Visualisasi
+
+Ketika kita ingin membuat histogram plot, kita tidak menggunakan fungsi `plot()`, melainkan kita akan menggunakan fungsi `hist()`
+
+```{r}
+# Please type your code down below
+hist(vids.agt$like_ratio)
+```
+
+Insight:
+
+- 3 kategori di atas memiliki like ratio yang rendah
+
+```{r}
+hist(vids.agt$like_ratio, breaks = 20)
+```
+
+
+**Summary Day 1**
+
+* **Workflow data visualisasi**: 
+  + 1. business question
+  + 2. prepare data (cleaning data, feature engineering)
+  + 3. visualisasi data
+* **Lubridate**: package yg memudahkan pengolahan data tanggal
+* **Feature engineering**: membuat kolom baru berdasarkan informasi yg ada pada data
+* **Base Plot**:
+  - `hist()`: histogram -> cek distribusi data
+  - cont. later
+* Tipe plot dan kegunaan: masing-masing plot memiliki kegunaan untuk menceritakan hal tertentu. **Plot harus dicocokan dengan cerita yang ingin disampaikan.**
+
+--- END OF DAY 1 ---
+
+
+## Boxplot
+
+Business case: Selain mengetahui secara garis besar mengenai distribusi dari ketiga kategori video tersebut. Klien kita juga ingin mengetahui lebih detail dari masing-masing kategori, *kategori video apakah yang memiliki like ratio paling tinggi?*
+
+```{r}
+# versi plot()
+plot(x = vids.agt$category_id,
+     y = vids.agt$like_ratio)
+
+# versi boxplot()
+boxplot(formula = like_ratio~category_id, 
+        data = vids.agt)
+```
+
+* Karena dilakukan filter terhadap beberapa kategori data, maka terdapat kategori kosong di boxplot kita. Hal ini dapat kita hilangkan dengan menggunakan fungsi `droplevels()`. 
+
+```{r}
+# Please type your code down below
+unique(vids.agt$category_id)
+```
+
+```{r}
+vids.agt$category_id <- droplevels(vids.agt$category_id)
+
+unique(vids.agt$category_id)
+```
+
+```{r}
+
+boxplot(formula = like_ratio~category_id, 
+        data = vids.agt)
+```
+
+
+Insight:
+
+- secara general, kategori Gaming memiliki like ratio yang lebih baik dari 2 kategori lain
+
+## Bar
+
+Business case: Setelah mengetahui konten yang menurutnya menarik, Pertanyaan selanjutnya adalah *pada rentang jam berapa saya harus publish supaya diminati?*
+
+```{r}
+# Please type your code down below
+plot(vids.agt$publish_when)
+```
+
+Insight:
+
+- 
+
+## Scatter plot
+
+Business case: Pertanyaan terakhir yang diajukan oleh klien kita adalah beliau juga ingin megetahui hubungan likes dan dislikes dari video dengan ketiga category tersebut. Agar dapat menentukan *content manakah yang tepat untuk di publish sehingga memperoleh likes ratio yang banyak dan dislikes ratio yang sedikit?*
+
+Step 1: Menghitung dislike ratio lalu simpan ke objek bernama `dislike_ratio`
+
+Hint: Rasio didapatkan dari membagi dislike dengan jumlah view per judul video
+
+```{r}
+# Please type your code down below
+vids.agt$dislike_ratio <- vids.agt$dislikes/vids.agt$views
+```
+
+Step 2: Melakukan visualisasi
+
+```{r}
+# Please type your code down below
+plot(x = vids.agt$like_ratio,
+     y = vids.agt$dislike_ratio,
+     col = vids.agt$category_id,
+     pch = 16)
+```
+
+Plot sudah terbentuk tapi kita kekurangan informasi kita tidak tahu titik mana dengan kategori `Autos and Vehicles`, `Gaming` atau `Travel and Events` Kita juga ingin menambahkan garis tren hubungan antara 2 variabel
+
+Step 3: Menambahkan Legend
+
+Untuk memberikan lagenda pada scatter plot kita bisa menambahkan fungsi `legend()`, pada fungsi tersebut nantinya kita bisa mengisi beberapa parameter
+  + `x` = mengatur posisi legend
+  + `legend` =  unique value dari kolom yang ingin ditampilkan
+  + `fill` =  untuk memberikan warna, sesuai dengan jumlah unique value dari kolom yang ingin ditampilkan
+
+```{r}
+# Please type your code down below
+plot(x = vids.agt$like_ratio,
+     y = vids.agt$dislike_ratio,
+     col = vids.agt$category_id,
+     pch = 16)
+legend(x = "topright", # hanya bisa di dalam kotak plotnya
+       legend = levels(vids.agt$category_id),
+       # fill = 1:3, inset=c(-0.2,0))
+       fill = 1:3)
+```
+
+Step 4: Menambahkan garis tren
+
+Untuk memberikan garis yang menunjukan apakah ada tren positif ataupun negatif kita bisa menambahkan fungsi `abline()` 
+  + Pada fungsi tersebut nantinya bisa di isi dengan fungsi `lm()` yang akan membuat garis linear berdasarkan perhitungan linear model, dengan mengisi beberapa parameter berikut ini
+    - `formula` = parameter ini bisa diisi dengan `numerik sumbu y ~ numerik sumbu x`
+    - `data` = dataframe yang digunakan
+
+```{r}
+# Please type your code down below
+plot(x = vids.agt$like_ratio,
+     y = vids.agt$dislike_ratio,
+     col = vids.agt$category_id,
+     pch = 16)
+legend(x = "right", # hanya bisa di dalam kotak plotnya
+       legend = levels(vids.agt$category_id),
+       # fill = 1:3, inset=c(-0.2,0))
+       fill = 1:3)
+abline(lm(formula = dislike_ratio ~ like_ratio, data = vids.agt))
+```
+
+Insight:
+
+- analisa lebih lanjut konten gaming dengan dislikes tinggi
+
+## Line plot
+
+Business Case: Sebagai seorang Data Analyst kita ingin menganalisa perkembangan trending dari hari ke harinya 
+
+Step 1: Membuat objek dengan yang berisikan jumlah trending video dari hari ke harinya lalu simpan ke dalam sebuah objek dengan nama `trending`
+
+Hint: 
+
+- `table()` adalah fungsi yang dapat dimanfaatkan untuk menghitung berapa kali chaneel tersebut menjadi trending
+- `as.data.frame()` adalah fungsi yang dapat dimanfaatkan untuk mengubah list menjadi dataframe
+
+```{r}
+# Please type your code down below
+trending <- data.frame(table(vids.unik$trending_date))
+trending
+plot(trending$Var1, trending$Freq, type = "l")
+```
+
+Step 2: Mengubah tipe data untuk kolom yang berisikan informasi tanggal menjadi date
+
+```{r}
+# Please type your code down below
+trending$Var1 <- ymd(trending$Var1)
+trending
+```
+
+Step 3: Melakukan visualisasi
+
+```{r}
+# Please type your code down below
+
+plot(trending$Var1, trending$Freq, type = "l") 
+```
+
+Insight: 
+
+**Kapan Menggunakan Base Plot?**
+
+- Ketika ingin membuat plot sederhana
+- Ketika kita ingin melakukan analisis secara cepat
+- Ketika grafik yang dihasilkan tidak untuk ditampilkan di depan umum
+
+# Grammar of Graphics with `ggplot2`
+
+Base plot amat berguna untuk melakukan eksplorasi data di awal dimana codingannya cukup sederhana. Ia dapat menyampaikan informasi mengenai data (distribusi/pola data) dan hubungan antar data secara cepat.
+
+Sistem grammar yang digunakan pada base plot adalah membuat fungsi secara berurutan dan harus dijalankan bersamaan sehingga tidak begitu fleksibel dalam kostumisasi plot.
+
+## What is ggplot
+
+```{r}
+#install.packages("ggplot2")
+library(ggplot2)
+```
+
+Apa itu ggplot2? ggplot2 adalah sebuah libary yang akan menyediakan sebuah kanvas kosong yang dapat digunakan untuk membuat visualisasi. Sistem pembuatannya akan berdasarkan *grammar formula of visualization* dan *layer by layer*. Kedua sistem pembuatannya sangat bisa untuk dikutomisasi sehingga plot yang disajikan nantinya sangat cocok jika ingin ditampilkan kepada audiens.
+
+*Grammar formula of ggplot2*
+`ggplot(data = ..., mapping = aes(x=..., y=...)) + geom_... + ...`
+
+```{r}
+ggplot(data = , mapping = aes(x=, y=))
+```
+
+Untuk lebih kenal dengan library ggplot2 mari kita coba melakukan visualisasi!
+
+**Business case:** Kita sebagai data analyst ingin mencari tahu tentang *likeability (like_ratio)* &  enggagement *(comments_ratio)* yang tinggi pada categry `Autos and Vehicles`, `Gaming` dan `Travel and Events`, manakah kategori yang paling baik untuk dibuatkan konten?
+
+Step 1: Buatlah kolom baru yang berisikan ratio comment dengan views
+
+Hint: 
+
+* Gunakan objek `vids.agt`
+* Buatlah object baru bernama `comment_ratio` yang berisikan hasil bagi kolom `comment_count` dengan kolom `views`
+
+```{r}
+# Please Type Your Code Down Below
+vids.agt$comment_ratio <- vids.agt$comment_count/vids.agt$views
+head(vids.agt$comment_ratio)
+```
+
+Step 2: Masukan parameter yang diperlukan untuk fungsi `ggplot()`
+
+Parameter pada fungsi `ggplot()`,
+
+* `data` =  dataframe yang ingin digunakan
+* `mapping` = parameter ini akan di isi dengan *Aesthetic / aes()*, aes() adalah fungsi yang bisa diisi dengan elemen-elemen yang penting dalam grafik, meliputi sumbu x, sumbu y.
+
+```{r}
+# Please Type Your Code Down Below
+# Main layer
+ggplot(data = vids.agt,
+       mapping = aes(x = category_id, y = comment_ratio))
+
+plot1 <- ggplot(data = vids.agt,
+       mapping = aes(x = category_id, y = comment_ratio))
+```
+
+Step 3: Menambahkan layer 
+
+Layer 1 - Boxplot
+
+Untuk menambahkan layer pada main layer, kita bisa menggunakan simbol `+`
+
+```{r}
+# Please Type Your Code Down Below
+ggplot(data = vids.agt,
+       mapping = aes(x = category_id, y = comment_ratio)) +
+  geom_boxplot()
+```
+
+Layer 2- scatterplot
+
+*geom_point*
+
+```{r}
+# Please Type Your Code Down Below
+ggplot(data = vids.agt,
+       mapping = aes(x = category_id, y = comment_ratio)) +
+  geom_boxplot() +
+  geom_point()
+```
+
+*geom_jitter*
+
+```{r}
+# Please Type Your Code Down Below
+plot1 +
+  geom_boxplot() +
+  geom_jitter()
+```
+
+Notes:
+* `geom_jitter`: scatterplot dengan titik yang random bergeser ke kiri/kanan, agar tidak tumpang tindih
+
+Step 4: Menambahkan parameter Aesthetic untuk fungsi geom
+
+```{r}
+# Please Type Your Code Down Below
+ggplot(data = vids.agt,
+       mapping = aes(x = category_id, y = comment_ratio)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(mapping = aes(size = like_ratio))
+```
+
+Step 5: Menambahkan warna pada plot 
+
+Untuk memberikan warna pada plot kita, kita bisa memanfaatkan parameter `color` atau `fill` pada fungsi `aes()`
+
+* Menggunakan parameter `fill`
+
+```{r}
+# Please Type Your Code Down Below
+ggplot(data = vids.agt,
+       mapping = aes(x = category_id, y = comment_ratio, color = category_id)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(mapping = aes(size = like_ratio))
+```
+
+* Menggunakan parameter `color`
+
+```{r}
+# Please Type Your Code Down Below
+ggplot(data = vids.agt,
+       mapping = aes(x = category_id, y = comment_ratio, fill = category_id)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(mapping = aes(size = like_ratio))
+```
+
+* Pengaruh penempatan parameter pada fungsi `aes()`
+
+Ditempatkan pada fungsi `ggplot()`
+
+```{r}
+# Please Type Your Code Down Below
+ggplot(data = vids.agt,
+       mapping = aes(x = category_id, y = comment_ratio, color = category_id)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(mapping = aes(size = like_ratio))
+```
+
+Ditempatkan pada fungsi salah satu `geom_`
+
+```{r}
+# Please Type Your Code Down Below
+ggplot(data = vids.agt,
+       mapping = aes(x = category_id, y = comment_ratio)) +
+  geom_boxplot(outlier.shape = NA, mapping = aes(color = category_id)) +
+  geom_jitter(mapping = aes(size = like_ratio))
+```
+
+Inclass Q: Gimana kalo kita pengen liat nilai yang like rationya lebih dari sebuah nilai yang kita tentukan?
+
+```{r}
+ggplot(data = vids.agt,
+       mapping = aes(x = category_id, y = comment_ratio)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(mapping = aes(size = like_ratio, color = like_ratio > 0.05)) +
+  scale_color_manual(values = setNames(c('red','black'),c(T, F)))
+```
+
+
+Step 6: Menambahkan keterangan title, subtitle, legends, dan label sumbu x dan y dengan menggunakan fungsi `labs()`
+
+```{r}
+# Please Type Your Code Down Below
+ggplot(data = vids.agt,
+       mapping = aes(x = category_id, y = comment_ratio)) +
+  geom_boxplot(outlier.shape = NA, mapping = aes(color = category_id)) +
+  geom_jitter(mapping = aes(size = like_ratio)) +
+  labs(title = "Comment & Like Ratio",
+       subtitle = "Category: Autos & Vehicles, Gaming, Travel & Events",
+       y = "Comment Ratio",
+       x = "Category", 
+       size = "Like ratio legend", 
+       color = NULL) +
+  theme(plot.title = element_text(face="bold")) + 
+  theme_void()
+
+```
+
+Inclass Q: Lawan dari %in%
+
+```{r}
+vids.agt[!(vids.agt$category_id %in% c("Gaming")),]
+```
+
+Inclass Q: Coba bahas line chart yang dipisahkan kategorinya.
+
+--- END OF DAY 2
+
+## Bar chart
+
+Business Case: Sebagai seorang Data Analyst kita ingin menganalisa channel yang yang sering menjadi trending, tolak ukur sebuah channel sering menjadi trending adalah *pernah masuk ke trend setidaknya 10 kali.*
+
+Step 1: Membuat sebuah objek dengan nama `trending_channel` yang berisikan dataframe yang chanel title yang pernah trend setidaknya 10 kali
+
+Hint: 
+
+- `table()` adalah fungsi yang dapat dimanfaatkan untuk menghitung berapa kali chaneel tersebut menjadi trending
+- `as.data.frame()` adalah fungsi yang dapat dimanfaatkan untuk mengubah list menjadi dataframe
+
+```{r}
+# Please type your code down below
+
+```
+
+Step 2: Melakukan conditional subseting hanya untuk channel yang pernah trending 10 kali setidaknya
+
+```{r}
+# Please type your code down below
+
+```
+
+Step 3: Coba visualisasikan dengan `geom_col`
+
+```{r}
+# Please type your code down below
+
+```
+
+Step 4: Coba kita switch antara kolom x & y pada parameter `aes()`
+
+```{r}
+# Please type your code down below
+
+```
+
+Step 5: Menambahkan parameter `reorder()` disumbu y
+
+* `reorder()` adalah sebuh parameter yang dapat dimanfaatkan untuk mengurutkan freq
+
+```{r}
+# Please type your code down below
+
+```
+
+Step 6: Mengubah warna dalam plot dengan menabahkan fungsi `scale_fill_gradient()`
+
+* `scale_fill_gradient()` adalah sebuah fungsi untuk meberikan gradasi warna pada setiap bar dalam `geom_col()`, parameter yang dapat digunakan adalah 
+  + `low` = parameter untuk warna yang paling bawah 
+  + `high` = parameter untuk warna yang paling atas
+
+```{r}
+# Please type your code down below
+
+```
+
+Step 7: Menambahkan `geom_text()`
+
+* `geom_text()` adalah sebuah fungsi untuk memberikan keteragan angka didalam bar plot
+  + `color` = Untuk memberikan warna ke text 
+  + `size` = untuk mengatur ukuran text
+  + `nudge_x` = untuk mengatur orientasi sumbu x
+
+```{r}
+# Please type your code down below
+
+```
+
+Insight:
+
+* 
+
+## Multivariate Plot
+
+Multivariate plot adalah sebuah plot yang digunakan untuk **menampilkan nilai dari beragam variabel secara bersamaan**. 
+
+```{r}
+knitr::include_graphics("assets/multivariate_example.png")
+```
+
+Untuk megetahui bagaimana membuat multivariate plot, mari kita coba replicate visualisasi diatas!
+
+Business Case: Cari mean *like ratio* & *dislikes ratio* dari setiap category dari data `vids.unik`
+
+Step 1: Mari kita cari rata-rata *like ratio* & *dislike ratio* 
+
+Untuk mencari rata-rata dari 2 kolom atau lebih secara bersamaan, kita bisa memanfaatkan sebuah fungsi yang bernama `aggregate.data.frame()`.
+
+- Parameter dari fungsi `aggregate.data.frame()`:
+  + `x`: list(kolom_1, kolom_2)
+  + `by`: list(categoric variable)
+  + `FUN`: fungsi matematis
+
+```{r}
+# Please Type Your Code Down Below
+vids.agg <- 
+```
+
+Step 2: Membuatnya menjadi dataframe menjadi long format 
+
+```{r}
+knitr::include_graphics("assets/long_wide.png")
+```
+
+Untuk melakukan reshaping data dengan pivot kita akan berkenalan dengan library baru bernama `tidyr`
+
+```{r}
+# install.packages(tidyr)
+library(tidyr)
+```
+
+Sebelumnya kita sudah berhasil membuat sebuah dataframe bernama `vids.agg`, mari kita ubah bentuk datanya dari wide format menjadi long format dengan menggunakan fungsi `pivot_longer()`
+
+Parameter pada fungsi `pivot_longer()`:
+
+- `data`: object data
+- `cols`: memilih kolom apa saja yang ingin diubah menjadi long format
+- `names_to`: mengubah nama kolom yang akan mewakili data categorical yang diubah menjadi format long
+- `values_to`: mengubah nama kolom yang mewakili data numeric
+
+```{r}
+# Please type your code down below
+
+```
+
+Simpan hasilnya kedalam sebuah object yang bernama `vids.agg.long`
+
+```{r}
+# Please type your code down below
+vids.agg.long <- 
+```
+
+*Contoh mengubah pivot longer -> pivot wider untuk keperluan pembelajaran*
+
+Sebelumnya kita subah berhasil melakukan reshaping data menjadi format long. Sekarang mari kita coba kembalikan ke format wide dengan menggunakan fungsi `pivot_wider()`
+
+Parameter pada fungsi `pivot_wider()`
+
+- `data`: object data
+- `names_from`: parameter ini untuk memberi tahu fungsi kolom apa yang mewakili data yang ingin kita buat menjadi wide
+- `values_from`: parameter ini untuk memberi tahu fungsi kolom apa yang mewakili data numeric
+
+```{r}
+# Please type your code down below
+
+```
+
+Step 3: Mari visualisasi dataframe yang sudah dibuat menjadi long format
+
+Pada fungsi `geom_col()` ada sebuah parameter yang bernama `position` dan didalam postion itu bisa memasukan sebuah value bernama `dodge`.
+
+```{r}
+# Please Type Your Code Down Below
+
+```
+
+Pada fungsi `geom_col()` ada sebuah parameter yang bernama `position` dan didalam postion itu bisa memasukan sebuah value bernama `fill`.
+
+```{r}
+# Please Type Your Code Down Below
+
+```
+
+Step 4: Mengubah warna dalam plot dengan menabahkan fungsi `scale_fill_manual()`
+
+- `scale_fill_manual()` adalah sebuah fungsi untuk meberikan gradasi warna pada setiap bar dalam `geom_col()`, parameter yang dapat digunakan adalah 
+  + `values` = parameter untuk menentukan warna apa saja yang akan digunakan
+  
+Contoh: `scale_fill_manual(values = c("orange", "red"))`
+
+```{r}
+# Please Type Your Code Down Below
+
+```
+
+## Faceting
+
+Memplotkan variabel di panel terpisah, sehingga visual menjadi lebih jelas. Fungsi yang dapat digunakan adalah `facet_wrap()`
+
+Parameter yang bisa digunakan pada fungsi `facet_wrap()`
+
+* `facets` =  parameter yang menentukan kolom apa yang mau dipisah
+* `scales` = ada 3 value yang bisa diisi pada parameter ini yaiut `free_x`, `free_y` & `free`
+
+Contoh:
+`facet_wrap(facets = ~ name, scales = "free_x")`
+
+```{r}
+# Tambahkan facet untuk scales = free_x
+
+```
+
+```{r}
+# Tambahkan facet untuk scales = free_y
+
+```
+
+```{r}
+# Tambahkan facet untuk scales = free
+
+```
+
+## Line chart
+
+Business Case: Bagaimana trending dari konten dengan kategori `Comedy`, `Education`,dan `Sciennce and technology` dari hari ke hari.
+
+Hint:
+
+* Pada kasus ini kita akan menggunakan objek `vids`
+
+Step 1: Mari kita persiapkan datanya dengan conditional subseting dengan memanfaatkan `%in%`
+
+```{r}
+# Please run the code down below
+vids.ces <- 
+```
+
+Step 2: Menghilangkan levels yang tidak diperlukan dengan menggunkan fungsi `droplevels()`
+
+```{r}
+# Please run the code down below
+vids.ces$category_id <- 
+```
+
+Step 3: Mari kita coba hitung kemunculan video yang trending dengan menggunkan fungsi `table()`
+
+```{r}
+# Please run the code down below
+vids.ces <- 
+```
+
+Step 4: Mari kita buat plotnya dengan menggunakan `geom_line()`
+
+```{r}
+# Please type your code down below
+ggplot(data = , mapping = aes(x = , y = Freq, color = )) 
+
+```
+
+Step 5: Mari kita buat plotnya dengan menggunakan `geom_point()`
+
+```{r}
+# Please type your code down below
+
+```
+
+Step 6: Mengatur sumbu X dengan menggunakan fungsi `scale_x_date()`
+
+Parameter yang dapat digunakan:
+- date breaks = `...days` `... week` `...month`
+- date_labels = format tanggal
+
+Contoh:
+`scale_x_date(date_breaks = "1 week", date_labels = "%m-%d")`
+
+```{r}
+# Please type your code down below
+
+```
+
+Step 6: Mengatur sumbu X dengan menggunakan fungsi `scale_y_continous()`
+
+Parameter yang dapat digunakan:
+- `breaks(seq(..,..,..))`
+
+Contoh:
+`scale_y_continuous(breaks = seq(3, 27, 3))`
+
+```{r}
+# Please type your code down below
+
+```
+
+Step 7: Make it better
+
+```{r}
+# Please type your code down below
+
+```
+
+**DIVE DEEPER**
+
+Business Case: Coba visualisasikan trending dari konten kategori `Gaming`, `Entertainment`,dan `Music` dengan menggunakan line plot dari tanggal *2018-01-01*.
+
+Additional Task!
+
+* Gunakan fungsi `scale_x_date()` dengan date breaks = 2 hari
+* Gunakan fungsi `labs()`, untuk membuat tampilan dari visualisasi lebih rapi
+* Coba tarik insight dari hasil visualisasi yang dibuat
+
+```{r}
+# Please type your code down below
+
+```
+
+# [Opt] Interactive Map with `leaflet`
+
+Kita dapat membuat interactive map dengan bantuan package `leaflet`. Leaflet sendiri adalah open-source JavaScript library untuk pembuatan interactive maps.
+
+Contoh sederhana:
+
+```{r}
+# install.packages("leaflet")
+library(leaflet)
+
+# get icon
+ico <- makeIcon(
+    iconUrl = "https://algorit.ma/wp-content/uploads/2017/07/logo_light_trans.png",
+    iconWidth=177/2, iconHeight=41/2
+)
+
+# make dummy data
+set.seed(418)
+loca <- data.frame(lat=runif(5, min = -6.24, max=-6.23),
+                   lng=runif(5, min=106.835, max=106.85))
+
+# check data
+loca
+```
+
+```{r}
+# create a leaflet map widget
+map1 <- leaflet()
+
+# add tiles from open street map
+map1 <- addTiles(map1)
+
+# add markers
+map1 <- addMarkers(map1, data = loca, icon=ico)
+
+map1
+```
+
+```{r}
+# prepare pop-up
+pops <- c(
+    "<h3>Algoritma Main HQ</h3><p>Visit us here!</p>",
+    "<strong>Algoritma Business Campus</strong>", 
+    "<h3>In-Construction</h3><p>New Secondary Campus</p>",
+    "<strong>Secondary Campus</strong>",
+    "<strong>The Basecamp (business-school)</strong>"
+)
+```
+
+```{r}
+# make new leaflet
+map2 <- leaflet()
+map2 <- addTiles(map2)
+map2 <- addMarkers(map2, data = loca, icon=ico, popup = pops)
+
+map2
+```
+
+Berikut adalah website dan referensi yang dapat mempermudah pemahaman kita mengenai leaflet:
+
+* [Leaflet for R](https://rstudio.github.io/leaflet/)
+* [Creating Choropleth Map for Geocoding in R](https://algotech.netlify.com/blog/creating-choropleth-with-mapshaper-and-r/)
+
+# Further Readings
+
+Berikut adalah referensi-referensi lain dan website yang dapat memudahkan kita untuk mengekplorasi seputar data visualisasi di R:
+
+* [ggplot2: Elegant Graphics for Data Analysis by Hadley Wickham](https://ggplot2-book.org/)
+* [Data-to-Viz](https://www.data-to-viz.com/): ragam tipe data dan plot yang cocok untuk data tersebut, dilengkapi contoh plot dan coding
+* [Algotech - Rplicate Series](https://algotech.netlify.app/tags/rplicate/)
+* [ggplot2 extensions](https://exts.ggplot2.tidyverse.org/): fitur-fitur tambahan yang bisa diintegrasi dengan ggplot2
+* [Eye Dropper Chrome extensions](https://chrome.google.com/webstore/detail/eye-dropper/hmdcmlfkchdmnmnmheododdhjedfccka): untuk memudahkan memilih warna costum dari internet
+* [HTML ColorCodes](https://htmlcolorcodes.com): untuk memilih warna costum dari internet
+* [Color Palette](https://www.nceas.ucsb.edu/sites/default/files/2020-04/colorPaletteCheatsheet.pdf)
+---
+
+
+
+
+

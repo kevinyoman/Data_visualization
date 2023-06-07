@@ -1,0 +1,14 @@
+name: Shiny_YT_Trend
+title: Shiny_YT_Trend
+username:
+account: kevinnp
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7366519
+bundleId: 6423200
+url: https://kevinnp.shinyapps.io/Shiny_YT_Trend/
+when: 1666273626.50709
+lastSyncTime: 1666273626.5071
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|flexdashboard_final.Rmd|shiny.pdf
